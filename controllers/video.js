@@ -1,3 +1,4 @@
+import apiKeyMaster from "../models/video/apiKeyMaster.js";
 import videoMaster from "../models/video/videoMaster.js";
 
 export const getAllVideos = async (req, res, next) => {
@@ -56,3 +57,23 @@ export const searchVideos = async (req, res, next) => {
         res.status(500).json({ message: "Something Went Wrong", success:false,err:err.message });
     }
 };
+
+export const addApiKey = async (req, res, next) => {
+    try{
+        let apiKey = req.body.apiKey
+
+        if(!apiKey){
+            const err = new Error("Please Provide a API Key")
+            err.status = 400
+            return next(err)
+        }
+
+        let insertApiKey = await apiKeyMaster.create({
+            apiKey
+        })
+
+        res.status(200).json({ message: "Added the new API Key", success:true});
+    }catch(err){
+        res.status(500).json({ message: "Something Went Wrong", success:false,err:err.message });
+    }
+}

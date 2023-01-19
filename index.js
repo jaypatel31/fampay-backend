@@ -1,13 +1,12 @@
-import express from "express";
+import express, { response } from "express";
 import DotEnv from "dotenv";
 import connection from "./database/db.js";
 import "express-async-errors";
 import globalErrorHandler from "./middlewares/errorMiddleware.js"
 import router from "./routes/index.js"
 import cors from "cors";
-import cron from "node-cron"
-import {google} from "googleapis" 
-import VideoMaster from "./models/video/videoMaster.js"
+import mongoose from "mongoose";
+import { ytCron } from "./utils/ytCron.js";
 
 const app = express();
 DotEnv.config();
@@ -24,81 +23,17 @@ app.use(globalErrorHandler)
 const PORT = process.env.PORT || 4000;
 
 
-const start = async () => {
-    try {
-        await connection(process.env.MONGODB_URI);
-        app.listen(PORT,()=>{
-            console.log(`Listening on Port ${PORT}`);
-        })
-    } catch (error) {
-        console.log(error);
-        console.log("Failed to connect to the database, server is not running.");
-    }
-};
-  
-await start();
-
-let publishedAfter = new Date(new Date().toDateString()).toISOString()
-
-let lastVideoTime = await VideoMaster.findOne({},'postedOn').sort({postedOn:-1})
-
-if(lastVideoTime){
-    publishedAfter = new Date(lastVideoTime.postedOn)
-    publishedAfter.setSeconds(publishedAfter.getSeconds()+2)
-}
-
-let job = false
-
-cron.schedule("*/15 * * * * *", async function () {
-    if(job){
-        return
-    }
-    job = true
-    console.log("Video Fetching Cron Job Started");
-    try{
-
-        const Googleservice = google.youtube({
-            version: "v3",
-            auth: process.env.YT_API_KEY,
-        });
-
-        const {data:{items}} = await Googleservice.search.list({
-            part: "snippet",
-            maxResults: 50,
-            order: "date",
-            q:"songs",
-            relevanceLanguage:"en",
-            publishedAfter:publishedAfter,
-        });
-
-
-        if(items.length>0){
-            publishedAfter = new Date(items[0].snippet.publishedAt)
-            publishedAfter.setSeconds(publishedAfter.getSeconds()+2)
-        }
-
-        let videosResources = items.map((item)=>{
-                return {
-                    videoId:item.id.videoId,
-                    title:item.snippet.title,
-                    description:item.snippet.description,
-                    thumbnails:item.snippet.thumbnails,
-                    channelTitle:item.snippet.channelTitle,
-                    postedOn:item.snippet.publishedAt
-                }
-            })
-            
-            console.log(videosResources)
-
-            let videosInsert = await VideoMaster.insertMany(videosResources,{ordered:false})
-
-            console.log("Video Fetching Cron Job Ended");
-            console.log("----------------------------------");
-            job=false
-    }catch(e){
-        console.log(e.message);
-        console.log("Video Fetching Cron Job Ended");
-        console.log("----------------------------------");
-        job=false
-    }
+app.on('ready', function() { 
+    app.listen(PORT,()=>{
+        console.log(`Listening on Port ${PORT}`);
+    })
+    
+    //Starting Cron Job
+    ytCron()
 });
+
+connection(process.env.MONGODB_URI);
+
+mongoose.connection.once('open', function() { 
+    app.emit('ready'); 
+})
