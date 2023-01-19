@@ -90,13 +90,13 @@ cron.schedule("*/15 * * * * *", async function () {
             
             console.log(videosResources)
 
-            let videosInsert = await VideoMaster.insertMany(videosResources)
+            let videosInsert = await VideoMaster.insertMany(videosResources,{ordered:false})
 
             console.log("Video Fetching Cron Job Ended");
             console.log("----------------------------------");
             job=false
     }catch(e){
-        console.log(e);
+        console.log(e.message);
         console.log("Video Fetching Cron Job Ended");
         console.log("----------------------------------");
         job=false

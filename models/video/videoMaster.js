@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const videoMasterSchema = new mongoose.Schema({
     videoId:{
         type:String,
-        required:true
+        required:true,
+        unique:true
     },
     title:{
         type:String,
