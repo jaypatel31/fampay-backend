@@ -18,25 +18,37 @@ export const searchVideos = async (req, res, next) => {
     try{
         let pg = Math.sign(req.query.page-1)?Number(req.query.page-1):0;
         let perpageItem = Math.sign(req.query.size)?Number(req.query.size):10
-        let searchTerm = req.query.term
+        let titleTerm = req.query.title
+        let descriptionTerm = req.query.description
+        let searchTerm = {
+            $and:[]
+        }
         
-        if(!searchTerm){
-            const err = new Error("Please Provide a Search Term")
+        if(titleTerm){
+            let regex = titleTerm.replace(
+                /[/\-\\^$*+?.()|[\]{}]/g,
+                "\\$&"
+              );
+            searchTerm['$and'].push({title:{$regex:regex,$options:"gi"}})
+        }
+        if(descriptionTerm){
+            let regex = descriptionTerm.replace(
+                /[/\-\\^$*+?.()|[\]{}]/g,
+                "\\$&"
+              );
+            searchTerm['$and'].push({description:{$regex:regex,$options:"gi"}})
+        }
+        if(!titleTerm && !descriptionTerm){
+            const err = new Error("Please Provide a Search Term in form of title or description")
             err.status = 400
             return next(err)
         }
 
         let totalItems = await videoMaster.countDocuments({
-            $or:[
-                {title:{$regex:searchTerm,$options:"i"}},
-                {description:{$regex:searchTerm,$options:"i"}},
-            ]
+            ...searchTerm
         })
         let videos = await videoMaster.find({
-            $or:[
-                {title:{$regex:searchTerm,$options:"i"}},
-                {description:{$regex:searchTerm,$options:"i"}},
-            ]
+            ...searchTerm
         }).sort({postedOn:-1}).skip(pg*perpageItem).limit(perpageItem)
 
         res.status(200).json({ message: "This is the searchVideos route", videos, success:true,pageNumber:pg+1,itemFetched:videos.length,totalItems });
