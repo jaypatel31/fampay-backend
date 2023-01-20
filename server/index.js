@@ -6,7 +6,7 @@ import globalErrorHandler from "./middlewares/errorMiddleware.js"
 import router from "./routes/index.js"
 import cors from "cors";
 import mongoose from "mongoose";
-import { ytCron } from "./server/utils/ytCron.js";
+import { ytCron } from "./utils/ytCron.js";
 
 const app = express();
 DotEnv.config();
