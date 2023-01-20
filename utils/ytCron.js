@@ -55,7 +55,6 @@ export const ytCron = async () => {
 
     //Cron Job runs every 15 sec
     cron.schedule("*/15 * * * * *", async function () {
-        console.log(apiKey)
         if(job){
             return
         }
@@ -112,7 +111,7 @@ export const ytCron = async () => {
 
             console.log(e.message);
 
-            if(e.response.status===403){
+            if(e.response && e.response.status===403){
                 console.log("API Key Expired. Updating Key...")
                 let updatedKey = await updateApiKey()
                 apiKey = updatedKey
