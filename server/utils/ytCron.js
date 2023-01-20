@@ -1,7 +1,7 @@
 import cron from "node-cron"
 import {google} from "googleapis" 
-import VideoMaster from "../models/video/videoMaster.js"
-import apiKeyMaster from "../models/video/apiKeyMaster.js";
+import VideoMaster from "../../models/video/videoMaster.js"
+import apiKeyMaster from "../../models/video/apiKeyMaster.js";
 
 export const ytCron = async () => {
 
@@ -99,7 +99,7 @@ export const ytCron = async () => {
                     }
                 })
                 
-                console.log(videosResources)
+                // console.log(videosResources)
 
                 let videosInsert = await VideoMaster.insertMany(videosResources,{ordered:false})
 
