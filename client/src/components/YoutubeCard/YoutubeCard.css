@@ -1,0 +1,15 @@
+.card_container{
+    width: 80%;
+}
+
+@media screen and (min-width: 500px) {
+    .card_container{
+        width: 45%;
+    }
+}
+
+@media screen and (min-width: 750px) {
+    .card_container{
+        width:30%;
+    }
+}
