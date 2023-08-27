@@ -8,3 +8,4 @@ const app = express();
 app.use("/video",videoRoute)
 
 export default app
+
